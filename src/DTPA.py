@@ -1187,7 +1187,7 @@ class InterfazTorneo:
     def ver_inscritos_interfaz(self, cat, ventana_padre):
         ventana_insc = Toplevel(ventana_padre)
         ventana_insc.title(f"Inscritos - {cat.nombre}")
-        ## ventana_insc.geometry("500x400")
+        ventana_insc.geometry("500x400")
         
         ventana_insc.transient(ventana_padre)
         ventana_insc.grab_set()
@@ -1214,7 +1214,7 @@ class InterfazTorneo:
     def ver_grupos_interfaz(self, cat, ventana_padre):
         ventana_grupos = Toplevel(ventana_padre)
         ventana_grupos.title(f"Grupos - {cat.nombre}")
-       ## ventana_grupos.geometry("500x500")
+        ventana_grupos.geometry("500x500")
         
         ventana_grupos.transient(ventana_padre)
         ventana_grupos.grab_set()
@@ -1379,12 +1379,15 @@ class InterfazTorneo:
                 fila = Frame(marco_duelos, bg="#E8E2E2")
                 fila.pack(fill=X, pady=6)
                 
-                texto_duelo = f"{duelo.esgrimista_a.nombre}   {duelo.puntaje_a_ingresado}  vs  {duelo.puntaje_b_ingresado}   {duelo.esgrimista_b.nombre}"
+                # Rescate seguro de puntajes: si el atributo no existe, asigna un 0
+                pts_a = getattr(duelo, 'puntaje_a_ingresado', 0)
+                pts_b = getattr(duelo, 'puntaje_b_ingresado', 0)
+                
+                texto_duelo = f"{duelo.esgrimista_a.nombre}   {pts_a}  vs  {pts_b}   {duelo.esgrimista_b.nombre}"
                 Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=45, anchor=W).pack(side=LEFT)
                 
                 Button(fila, text="Ingresar|Modificar Resultado", command=lambda d=duelo: self.ingresar_resultado_duelo(cat, d, dibujar_duelos, vent), bg="#2c3e50", fg="white").pack(side=LEFT, padx=5)
                 Button(fila, text="Registrar Sanciones", command=lambda d=duelo: self.registrar_sanciones_duelo(cat, d, vent), bg="#940101", fg="white").pack(side=LEFT, padx=5)
-
         dibujar_duelos()
 
         marco_botones = Frame(vent, bg="#E8E2E2")
@@ -1936,7 +1939,7 @@ class InterfazTorneo:
                     
                 subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", f"Broadcast {etapa} en vivo - {cat.nombre}"], cwd=ROOT_DIR, check=False, capture_output=True) 
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "main"], cwd=ROOT_DIR, check=True, capture_output=True)
                 label_status.config(text="En línea", fg="#27ae60")
             except Exception as e:
                 label_status.config(text="Error de conexión", fg="#940101")
@@ -1974,7 +1977,7 @@ class InterfazTorneo:
                 
                 subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Fin de Broadcast (Standby)"], cwd=ROOT_DIR, check=False, capture_output=True)
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "main"], cwd=ROOT_DIR, check=True, capture_output=True)
                 
                 label_status.config(text="Apagado", fg="#7f8c8d") 
             except Exception as e:
@@ -1999,7 +2002,7 @@ class InterfazTorneo:
                     
                 subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Auto-actualización de puntaje en vivo"], cwd=ROOT_DIR, check=False, capture_output=True)
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "main"], cwd=ROOT_DIR, check=True, capture_output=True)
             except Exception as e:
                 print(f"Error en autoguardado Git: {str(e)}")
                 if hasattr(self, 'label_status_web'):
