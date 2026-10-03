@@ -1301,6 +1301,7 @@ class InterfazTorneo:
         label_status_web.pack(side=LEFT)
         
         Button(marco_inferior, text="Guardar", command=self.exportar_configuracion, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
+        Button(marco_inferior, text="Cargar", command=self.cargar_datos_torneo, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
         Button(marco_inferior, text="Finalizar Torneo", command=lambda: messagebox.showinfo("Fin", "Función en construcción"), bg="#940101", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
 
 
