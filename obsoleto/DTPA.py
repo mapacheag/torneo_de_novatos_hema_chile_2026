@@ -585,7 +585,7 @@ class Categoria:
             /* Marca de agua (Bandera) */
             body::before {
                 content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                background-image: url('../assets/images/bandera_chile.png'); background-repeat: no-repeat; background-position: center; background-size: cover;
+                background-image: url('./bandera_chile.png'); background-repeat: no-repeat; background-position: center; background-size: cover;
                 opacity: 0.1; z-index: -1;
             }
             
@@ -627,7 +627,7 @@ class Categoria:
 <body>
     <div class="header-top">
         <!-- El onerror asegura que si no encuentra el png busque el ico automáticamente -->
-        <img src="../assests/images/hema_chile_logo.png" alt="Logo HEMA Chile" class="logo" onerror="this.src='../assets/icons/hema_chile_logo.ico';">
+        <img src="./hema_chile_logo.png" alt="Logo HEMA Chile" class="logo" onerror="this.src='./hema_chile_logo.ico';">
         <h1>Torneo de Novatos HEMA Chile</h1>
         <h2>Edición 2026</h2>
         <h3>Seguimiento en Vivo</h3>
@@ -664,11 +664,11 @@ class PantallaCarga:
         self.pagina_principal.config(background = "#E8E2E2")
 
         if sys.platform.startswith("win"):
-            if os.path.exists("../assets/icons/logo_hemachile.ico"):
-                self.pagina_principal.iconbitmap("../assets/icons/logo_hemachile.ico")
+            if os.path.exists("./logo_hemachile.ico"):
+                self.pagina_principal.iconbitmap("./logo_hemachile.ico")
         else:
-            if os.path.exists("../assets/images/logo_hemachile.png"):
-                icono = PhotoImage(file = "../assets/images/logo_hemachile.png")
+            if os.path.exists("./logo_hemachile.png"):
+                icono = PhotoImage(file = "./logo_hemachile.png")
                 self.pagina_principal.iconphoto(True, icono)
                 
         self.construir_interfaz_carga()
@@ -681,9 +681,9 @@ class PantallaCarga:
         marco_titulo.pack(pady=(0, 5))
 
         self.logo_img = None
-        if os.path.exists("../assets/images/logo_hemachile.png"):
+        if os.path.exists("./logo_hemachile.png"):
             try:
-                imagen_raw = Image.open("../assets/images/logo_hemachile.png")
+                imagen_raw = Image.open("./logo_hemachile.png")
                 imagen_raw = imagen_raw.resize((70, 70), Image.Resampling.LANCZOS)
                 self.logo_img = ImageTk.PhotoImage(imagen_raw)
                 Label(marco_titulo, image=self.logo_img, bg="#E8E2E2").pack(side=LEFT, padx=(0, 15))
@@ -740,11 +740,11 @@ class InterfazTorneo:
         self.categorias_procesadas = {}
 
         if sys.platform.startswith("win"):
-            if os.path.exists("../assets/icons/logo_hemachile.ico"):
-                self.pagina_principal.iconbitmap("../assets/icons/logo_hemachile.ico")
+            if os.path.exists("./logo_hemachile.ico"):
+                self.pagina_principal.iconbitmap("./logo_hemachile.ico")
         else:
-            if os.path.exists("../assets/images/logo_hemachile.png"):
-                icono = PhotoImage(file = "../assets/images/logo_hemachile.png")
+            if os.path.exists("./logo_hemachile.png"):
+                icono = PhotoImage(file = "./logo_hemachile.png")
                 self.pagina_principal.iconphoto(True, icono)
         self.construir_ventana_principal()
 
@@ -1866,7 +1866,7 @@ class InterfazTorneo:
                 </style></head>
                 <body>
                 <div class="contenedor">
-                    <img src="../assets/images/hema_chile_logo.png" onerror="this.src='../assets/icons/hema_chile_logo.ico';" alt="Logo" width="120">
+                    <img src="./hema_chile_logo.png" onerror="this.src='./hema_chile_logo.ico';" alt="Logo" width="120">
                     <h1 style="color: #940101;">Torneo de Novatos HEMA Chile 2026</h1>
                     <h2 style="color: #2c3e50;">Transmisión en espera.</h2>
                     <p style="color: #7f8c8d; font-size: 18px;">El torneo ha finalizado esta etapa o se encuentra en pausa.<br>En breve iniciaremos la siguiente transmisión.</p>
