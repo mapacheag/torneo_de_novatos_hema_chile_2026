@@ -1304,6 +1304,17 @@ class InterfazTorneo:
         Button(marco_inferior, text="Cargar", command=self.cargar_datos_torneo, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
         Button(marco_inferior, text="Finalizar Torneo", command=lambda: messagebox.showinfo("Fin", "Función en construcción"), bg="#940101", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
 
+    def cargar_datos_torneo(self):
+        ruta_archivo = filedialog.askopenfilename(
+        title="Cargar configuración del torneo",
+        filetypes=[("Archivos de Torneo DTPA", "*.dtpa"), ("Todos los archivos", "*.*")]
+        )
+
+        if ruta_archivo:
+            try:            
+                messagebox.showinfo("Carga exitosa", "Muy Épico, tengo sueño, rellenar botón luego")
+            except Exception as e:
+                messagebox.showerror("Error de lectura", f"No se pudo cargar el archivo:\n{str(e)}")
 
     def ventana_vacia(self, titulo, padre):
         vent = Toplevel(padre)
