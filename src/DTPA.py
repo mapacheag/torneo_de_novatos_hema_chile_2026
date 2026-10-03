@@ -627,7 +627,7 @@ class Categoria:
 <body>
     <div class="header-top">
         <!-- El onerror asegura que si no encuentra el png busque el ico automáticamente -->
-        <img src="./assests/images/hema_chile_logo.png" alt="Logo HEMA Chile" class="logo" onerror="this.src='./assets/icons/hema_chile_logo.ico';">
+        <img src="./assests/images/hema_chile_logo.png" alt="Logo HEMA Chile" class="logo" onerror="this.onerror=null; this.src='./assets/icons/hema_chile_logo.ico';">
         <h1>Torneo de Novatos HEMA Chile</h1>
         <h2>Edición 2026</h2>
         <h3>Seguimiento en Vivo</h3>
@@ -1866,7 +1866,7 @@ class InterfazTorneo:
                 </style></head>
                 <body>
                 <div class="contenedor">
-                    <img src="./assets/images/hema_chile_logo.png" onerror="this.src='./assets/icons/hema_chile_logo.ico';" alt="Logo" width="120">
+                    <img src="./assets/images/hema_chile_logo.png" onerror="this.onerror=null; this.src='./assets/icons/hema_chile_logo.ico';" alt="Logo" width="120">
                     <h1 style="color: #940101;">Torneo de Novatos HEMA Chile 2026</h1>
                     <h2 style="color: #2c3e50;">Transmisión en espera.</h2>
                     <p style="color: #7f8c8d; font-size: 18px;">El torneo ha finalizado esta etapa o se encuentra en pausa.<br>En breve iniciaremos la siguiente transmisión.</p>
