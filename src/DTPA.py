@@ -36,7 +36,7 @@ import os
 import sys
 import pickle
 import ctypes
-
+import subprocess
 
 ##############################################################
 ### "magia" para que la pantalla de mierda no se vea borrosa
@@ -361,18 +361,13 @@ class Categoria:
 
         if n_clasificados < 2:
             return "<h2 style='font-family: Georgia; color: #940101; text-align: center;'>No hay suficientes clasificados para armar el fixture.</h2>"
-
-        # Ordenamos y calculamos la potencia de 2
         clasificados_ordenados = sorted(list(clasificados_set), key=lambda e: (e.puntos_totales, e.diferencia_total), reverse=True)
         n_rondas = math.ceil(math.log2(n_clasificados))
         n_slots = 2 ** n_rondas
 
-        # Rellenamos con Pasa Libre (BYE) si faltan cupos para cerrar la llave
         nombres_jugadores = [e.nombre for e in clasificados_ordenados]
         while len(nombres_jugadores) < n_slots:
             nombres_jugadores.append("BYE (Pasa Libre)")
-
-        # Algoritmo de cruces FIE
         def generar_orden_bracket(n):
             if n == 1: return [1]
             mitad = generar_orden_bracket(n // 2)
@@ -384,8 +379,6 @@ class Categoria:
 
         orden_semillas = generar_orden_bracket(n_slots)
         nombres_ordenados = [nombres_jugadores[i - 1] for i in orden_semillas]
-
-        # Construcción dinámica de las columnas HTML
         html_rondas = ""
         for ronda in range(n_rondas, 0, -1):
             if ronda == 1: nombre_fase = "FINAL"
@@ -402,12 +395,10 @@ class Categoria:
             for i in range(n_duelos):
                 html_rondas += "<div class='duelo'>\n"
                 
-                # Si es la primera ronda (los extremos), ponemos los nombres reales
                 if ronda == n_rondas: 
                     esg_a = nombres_ordenados[i * 2]
                     esg_b = nombres_ordenados[i * 2 + 1]
                 else: 
-                    # En vivo, las fases futuras inician vacías hasta que se avance
                     esg_a = "Por definir"
                     esg_b = "Por definir"
                 
@@ -417,7 +408,6 @@ class Categoria:
                 
             html_rondas += "</div>\n"
 
-        # Ensamblaje final del HTML con CSS inyectado
         html_final = f"""
         <!DOCTYPE html>
         <html>
@@ -626,7 +616,6 @@ class Categoria:
 </head>
 <body>
     <div class="header-top">
-        <!-- El onerror asegura que si no encuentra el png busque el ico automáticamente -->
         <img src="./assets/images/hema_chile_logo.png" alt="Logo HEMA Chile" class="logo" onerror="this.onerror=null; this.src='./assets/icons/logo_hemachile.ico';">
         <h1>Torneo de Novatos HEMA Chile</h1>
         <h2>Edición 2026</h2>
@@ -638,8 +627,6 @@ class Categoria:
         <div class="info-text color-azul">Etapa en desarrollo: <span class="{clase_etapa}">{texto_etapa}</span></div>
         
         <h2 class="color-negro" style="margin-top: 50px; margin-bottom: 40px; font-size: 26px;">{titulo_seccion}</h2>
-        
-        <!-- Aquí se inyecta dinámicamente la tabla o el fixture -->
         {contenido_dinamico}
     </div>
 </body>
@@ -1404,14 +1391,12 @@ class InterfazTorneo:
         
         duelo_str = f"{duelo.esgrimista_a.nombre} vs {duelo.esgrimista_b.nombre}"
         
-        # Esgrimista A
         marco_a = Frame(vent, bg="#E8E2E2")
         marco_a.pack(fill=X, pady=15, padx=20)
         Label(marco_a, text=duelo.esgrimista_a.nombre, bg="#E8E2E2", width=25, anchor=W).pack(side=LEFT)
         Button(marco_a, text="Sanción leve", command=lambda: [duelo.registrar_falta_leve_a(), self.actualizar_broadcast_silencioso(cat), messagebox.showinfo("Sanción", "Leve registrada.", parent=vent)], bg="#2c3e50", fg="white").pack(side=LEFT, padx=5)
         Button(marco_a, text="Sanción Grave", command=lambda: [duelo.esgrimista_a.registrar_falta_grave(duelo_str=duelo_str), self.actualizar_broadcast_silencioso(cat), messagebox.showinfo("Sanción", "Grave registrada.", parent=vent)], bg="#940101", fg="white").pack(side=LEFT, padx=5)
 
-        # Esgrimista B
         marco_b = Frame(vent, bg="#E8E2E2")
         marco_b.pack(fill=X, pady=10, padx=20)
         Label(marco_b, text=duelo.esgrimista_b.nombre, bg="#E8E2E2", width=25, anchor=W).pack(side=LEFT)
@@ -1500,7 +1485,6 @@ class InterfazTorneo:
         Button(vent, text="Editar Sanciones del Seleccionado", command=boton_editar_seleccionado, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(pady=10)
 
     def recalcular_sanciones_esgrimista(self, esg):
-        """Recalcula los totales del esgrimista basándose en la edición de su historial."""
         esg.faltas_graves_totales = sum(1 for s in esg.historial_sanciones if s['tipo'] == 'Grave')
         esg.descalificado = (esg.faltas_graves_totales >= 2)
         
@@ -1836,13 +1820,16 @@ class InterfazTorneo:
         
         def tarea_git():
             try:
-                import subprocess
+                ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                INDEX_PATH = os.path.join(ROOT_DIR, "index.html")
+                
                 html_content = cat.generar_index_html(etapa)
-                with open("../index.html", "w", encoding="utf-8") as f:
+                with open(INDEX_PATH, "w", encoding="utf-8") as f:
                     f.write(html_content)
-                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
-                subprocess.run(["git", "commit", "-m", f"Broadcast {etapa} en vivo - {cat.nombre}"], check=False, capture_output=True) 
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
+                    
+                subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "commit", "-m", f"Broadcast {etapa} en vivo - {cat.nombre}"], cwd=ROOT_DIR, check=False, capture_output=True) 
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
                 label_status.config(text="En línea", fg="#27ae60")
             except Exception as e:
                 label_status.config(text="Error de conexión", fg="#940101")
@@ -1857,7 +1844,9 @@ class InterfazTorneo:
         
         def tarea_git():
             try:
-                import subprocess
+                ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                INDEX_PATH = os.path.join(ROOT_DIR, "index.html")
+                
                 html_standby = """<!DOCTYPE html>
                 <html lang="es"><head><meta charset="utf-8"><title>Standby - HEMA Chile</title>
                 <style>
@@ -1873,12 +1862,12 @@ class InterfazTorneo:
                 </div>
                 </body></html>"""
                 
-                with open("../index.html", "w", encoding="utf-8") as f:
+                with open(INDEX_PATH, "w", encoding="utf-8") as f:
                     f.write(html_standby)
                 
-                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
-                subprocess.run(["git", "commit", "-m", "Fin de Broadcast (Standby)"], check=False, capture_output=True)
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
+                subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "commit", "-m", "Fin de Broadcast (Standby)"], cwd=ROOT_DIR, check=False, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
                 
                 label_status.config(text="Apagado", fg="#7f8c8d") 
             except Exception as e:
@@ -1894,13 +1883,16 @@ class InterfazTorneo:
             
         def tarea_git():
             try:
-                import subprocess
+                ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                INDEX_PATH = os.path.join(ROOT_DIR, "index.html")
+                
                 html_content = cat.generar_index_html(self.etapa_broadcast)
-                with open("../index.html", "w", encoding="utf-8") as f:
+                with open(INDEX_PATH, "w", encoding="utf-8") as f:
                     f.write(html_content)
-                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
-                subprocess.run(["git", "commit", "-m", "Auto-actualización de puntaje en vivo"], check=False, capture_output=True)
-                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
+                    
+                subprocess.run(["git", "add", "index.html"], cwd=ROOT_DIR, check=True, capture_output=True)
+                subprocess.run(["git", "commit", "-m", "Auto-actualización de puntaje en vivo"], cwd=ROOT_DIR, check=False, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], cwd=ROOT_DIR, check=True, capture_output=True)
             except Exception as e:
                 print(f"Error en autoguardado Git: {str(e)}")
                 if hasattr(self, 'label_status_web'):
