@@ -45,10 +45,10 @@ import ctypes
 
 if sys.platform.startswith("win"):
     try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(2) # Per-monitor DPI aware
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except Exception:
         try:
-            ctypes.windll.user32.SetProcessDpiAwarenessContext(-4) # Fallback para versiones más recientes
+            ctypes.windll.user32.SetProcessDpiAwarenessContext(-4)
         except Exception:
             pass
 
@@ -108,7 +108,7 @@ class Duelo:
         
         if self.faltas_leves_a >= 3:
             self.esgrimista_a.derrotas_por_faltas += 1
-            self.asignar_resultado(0, 5) # Derrota directa por acumulación
+            self.asignar_resultado(0, self.puntaje_b_ingresado)
 
     def registrar_falta_leve_b(self, fase="Grupos"):
         self.faltas_leves_b += 1
@@ -118,7 +118,7 @@ class Duelo:
         
         if self.faltas_leves_b >= 3:
             self.esgrimista_b.derrotas_por_faltas += 1
-            self.asignar_resultado(5, 0)
+            self.asignar_resultado(self.puntaje_a_ingresado, 0)
 
     def asignar_resultado(self, puntos_a: int, puntos_b: int):
         if self.resuelto:
@@ -193,8 +193,6 @@ class Categoria:
         self.nombre = nombre
         self.esgrimistas = []
         self.grupos = []
-        
-        # Configuración de clasificados
         self.cupos_fijos = 0
         self.usar_terceros = False
         self.cupos_terceros = 0
@@ -227,7 +225,6 @@ class Categoria:
             grupo_elegido.agregar_esgrimista(esgrimista)
 
     def obtener_clasificados(self):
-        """Devuelve un 'set' con los objetos Esgrimista que logran clasificar."""
         clasificados = set()
         candidatos_terceros = []
 
@@ -1257,7 +1254,7 @@ class InterfazTorneo:
         scrollbar.pack(side=RIGHT, fill=Y)
         arbol.pack(fill=BOTH, expand=True)
 
-    def abrir_panel_torneo_blanco(self, ventana_previa, cat_actual, fijos, usar_terc, n_terc):
+    def abrir_panel_de_torneo(self, ventana_previa, cat_actual, fijos, usar_terc, n_terc):
         ventana_previa.destroy()
         
         cat_actual.cupos_fijos = fijos
@@ -1845,7 +1842,7 @@ class InterfazTorneo:
                     f.write(html_content)
                 subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", f"Broadcast {etapa} en vivo - {cat.nombre}"], check=False, capture_output=True) 
-                subprocess.run(["git", "push"], check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
                 label_status.config(text="En línea", fg="#27ae60")
             except Exception as e:
                 label_status.config(text="Error de conexión", fg="#940101")
@@ -1881,7 +1878,7 @@ class InterfazTorneo:
                 
                 subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Fin de Broadcast (Standby)"], check=False, capture_output=True)
-                subprocess.run(["git", "push"], check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
                 
                 label_status.config(text="Apagado", fg="#7f8c8d") 
             except Exception as e:
@@ -1903,7 +1900,7 @@ class InterfazTorneo:
                     f.write(html_content)
                 subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Auto-actualización de puntaje en vivo"], check=False, capture_output=True)
-                subprocess.run(["git", "push"], check=True, capture_output=True)
+                subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
             except Exception as e:
                 print(f"Error en autoguardado Git: {str(e)}")
                 if hasattr(self, 'label_status_web'):
