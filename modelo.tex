@@ -1,0 +1,134 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{mathtools}
+\usepackage{biblatex}
+\usepackage[table, dvipsnames]{xcolor}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{gensymb}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{ragged2e}
+\usepackage{wrapfig}
+\usepackage[labelformat=simple]{subfig}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} 
+\usepackage{makecell}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows, positioning, calc}
+\usepackage{ifthen}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\geometry{a4paper, left=15mm, right=15mm, top=20mm, bottom=30mm, headheight=10pt}
+\usepackage[T1]{fontenc}
+\renewcommand{\thesubfigure}{\relax}  % Do nothing for the counter »subfigure«
+
+\pagestyle{fancy}
+\fancyhf{} % Limpia encabezados y pies de página por defecto
+\renewcommand{\headrulewidth}{0pt} % Quita la línea horizontal del encabezado (pon 0.4pt si la quieres)
+
+% --- Configuración de las esquinas superiores ---
+\pagestyle{fancy}
+\fancyhf{} % Limpia encabezados y pies de página por defecto (Página 2 en adelante)
+\renewcommand{\headrulewidth}{0pt} % Quita la línea horizontal
+
+
+% Obliga a LaTeX a mantener el encabezado incluso en la página del título (\maketitle)
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhead[L]{\includegraphics[height=2cm]{logo_pa.png}}
+  \fancyhead[R]{\small Documento de acceso libre \\ Torneo de Novatos 2026 \\ Praelium Australis \\ Santiago, Chile}
+}
+
+
+
+\title{\textbf{Modelo para la distribución aleatoria de esgrimistas\\
+en grupos según los criterios definidos para la\\ 
+organización del \textit{Torneo de Novatos 2026}}}
+\author{Torneo de Novatos 2026 ; \textit{Desarrollado por Praelium Australis}}
+\date{\today}
+
+
+
+
+\begin{document}
+
+\maketitle
+
+\noindent Considerese un conjunto de $n$ clubes diferentes; $C = \{c_1, c_2, ... , c_n\}$. En cada club hay una cantidad definida $m_k$ %
+de esgrimistas inscritos, $k \in \mathds{N}, k \in [1,n]$. Se define al club k-ésimo como el conjunto:
+
+\begin{equation*}
+C_k \coloneq \{i_j \in C_k | j \in \mathds{N},  j \in [1,m_k]\}
+\end{equation*}
+
+\noindent Siendo $i_j$ el j-ésimo esgrimista correspondiente al k-ésimo club. Se define así, de forma generalizada como \textit{participante} %
+del torneo, al vector de dos atributos $p = (C_k, i_j)$, donde $k \in \mathds{N}, k \in [1,n]$ y $j \in \mathds{N}, j \in [1,m_k]$. %
+Particularmente, el conjunto de todos los \textit{participantes} del torneo, estará dado por:
+
+\begin{equation*}
+P \coloneq \{ p = (C_k, i_j) | k,j \in \mathds{N}, k \in [1,n], j \in [1,m_k]\}
+\end{equation*}
+
+\noindent Construyanse de forma auxiliar el conjunto $G$ de $w$ grupos de la forma $G = \{ G_1, G_2, ... , G_w\}$ y los conjuntos $P^1$ y $P^2$, %
+definidos de la siguiente forma:
+
+\begin{align*}
+    P^1 = \{ (C_k, i_j) \in P | m_k \geq w\} \\
+    P^2 = \{ (C_k, i_j) \in P | m_k < w\}
+\end{align*}
+
+\noindent Sea $\theta_2 = |P^2|$ la cardinalidad del conjunto, se define una función biyectiva $O : P^2 \rightarrow \{ 1,2,...,\theta_2\}$ basada en %
+el orden lexicográfico de las tuplas $(k,j)$. Así, cada elemento en $P^2$ adquiere su índice ordinal $\theta = O(C_k,i_j)$. Se define el conjunto auxiliar $P^{2\dag}$ %
+a partir de $P^2$ mediante la relación siguiente:
+
+
+\begin{align*}
+\forall p^\dag \in P^{2\dag}, p^\dag = (p, O(p)) \\
+\text{De esta forma: } P^{2\dag} = \{ (p, O(p)) = (p, \theta) | p \in P^2\}
+\end{align*}
+
+\noindent Se distribuye a los \textit{participantes} en grupos mediante una función $f : P^1 \cup P^{2\dag} \mapsto G$ definida en partes como sigue:
+
+
+\begin{equation*}
+f(x) = \begin{cases}
+    f(x) = f(C_k,i_j) = G_{((j-1) \bmod w)+1} & \text{Si } x \in P^1 \\
+    f(x) = f(C_k,i_j,\theta) = G_{((\theta -1) \bmod w)+1} & \text{Si } x \in P^{2\dag} 
+\end{cases}
+\end{equation*}
+
+\noindent De esta forma, $G_h \neq \varnothing, \text{  } \forall h \in [1,w]$ Ahora, sea $I_w = \{1, 2, ... , w \}$ el conjunto de índices correspondientes %
+a los $w$ grupos del torneo. Se define $\mathcal{F}_{bi}(I_w)$ como el conjunto de todas las funciones biyectivas cuyo dominio y codominio sea $I_w$. Sea como sigue:
+
+\begin{equation*}
+\mathcal{F}_{bi}(I_w) = \{  \sigma : I_w \mapsto I_w | \sigma \text{ es biyectiva} \}
+\end{equation*}
+
+\noindent Tómese una función aleatoria $\sigma$ del conjunto $\mathcal{F}_{bi}(I_w)$, asumiendo una distribución de probabilidad uniforme sobre el conjunto $\mathcal{F}_{bi}(I_w)$ %
+tal que la probabilidad de escoger una biyección de entre todas, corresponde a $(1/w!)$. Finalmente, a partir de la permutación $\sigma$ se define una transformación biyectiva %
+$T : G \mapsto G$, que reasigna cada grupo, en su posición ordinal, a un nuevo grupo de forma estocástica. (Esto implica que, el grupo $G_1$ puede convertirse en el $G_3$ y el $G_3$ en el $G_{w-2}, etc$). %
+De esta forma:
+
+\begin{equation*}
+T(G_x) = G_{\sigma(x)}
+\end{equation*}
+
+\noindent Condensando el desarrollo aquí expresado, se puede deducir de manera directa que; la distribución definitiva de los \textit{participantes} del torneo, está dada por la composición %
+de las funciones $f$ y $T$. De esta forma, se sigue que: Sea $D_f : P^1 \cup P^{2\dag} \mapsto G$ la función final de ditribución de esgrimistas participantes, esta se encuentra descrita de la siguiente forma:
+
+\begin{equation*}
+D_f(x) = (T \circ f)(x) = T(f(x))
+\end{equation*}
+
+
+
+\end{document}
