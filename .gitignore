@@ -4,3 +4,4 @@
 *.out
 *.run.xml
 .ipynb_checkpoints/
+.vscode/
