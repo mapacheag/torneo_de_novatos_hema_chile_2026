@@ -688,7 +688,7 @@ class PantallaCarga:
 
         Label(
             marco_centro,
-            text="Prototipo 0.1.36",
+            text="Prototipo 0.4.1",
             font=("Georgia", 11, "italic"),
             bg="#E8E2E2",
             fg="#7f8c8d"
@@ -1300,19 +1300,35 @@ class InterfazTorneo:
         Label(marco_status, text="STATUS online: ", font=("Georgia", 11, "bold"), bg="#E8E2E2").pack(side=LEFT)
         label_status_web.pack(side=LEFT)
         
-        Button(marco_inferior, text="Guardar", command=self.exportar_configuracion, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
-        Button(marco_inferior, text="Cargar", command=self.cargar_datos_torneo, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
+        Button(marco_inferior, text="Guardar", command=lambda: self.guardar_progreso_torneo(cat_actual), bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
+        Button(marco_inferior, text="Cargar", command=lambda: self.cargar_datos_torneo(cat_actual, panel_torneo), bg="#2c3e50", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
         Button(marco_inferior, text="Finalizar Torneo", command=lambda: messagebox.showinfo("Fin", "Función en construcción"), bg="#940101", fg="white", font=("Georgia", 11, "bold"), width=15).pack(side=RIGHT, padx=5)
 
-    def cargar_datos_torneo(self):
+    def cargar_datos_torneo(self, cat_actual, ventana_panel):
         ruta_archivo = filedialog.askopenfilename(
-        title="Cargar configuración del torneo",
-        filetypes=[("Archivos de Torneo DTPA", "*.dtpa"), ("Todos los archivos", "*.*")]
+            title="Cargar configuración del torneo",
+            filetypes=[("Archivos de Torneo DTPA", "*.dtpa"), ("Todos los archivos", "*.*")]
         )
-
+        
         if ruta_archivo:
-            try:            
-                messagebox.showinfo("Carga exitosa", "Muy Épico, tengo sueño, rellenar botón luego")
+            try:
+                with open(ruta_archivo, 'rb') as f:
+                    categoria_cargada = pickle.load(f)
+                if isinstance(categoria_cargada, dict):
+                    cat_actual.__dict__.update(categoria_cargada)
+                else:
+                    cat_actual.__dict__.update(categoria_cargada.__dict__)
+            
+                messagebox.showinfo("Carga exitosa", "Los datos del torneo se han cargado correctamente.")
+                ventana_panel.destroy()
+                self.abrir_panel_de_torneo(
+                    ventana_previa=Toplevel(), 
+                    cat_actual=cat_actual, 
+                    fijos=cat_actual.cupos_fijos, 
+                    usar_terc=cat_actual.usar_terceros, 
+                    n_terc=cat_actual.cupos_terceros
+                )
+                
             except Exception as e:
                 messagebox.showerror("Error de lectura", f"No se pudo cargar el archivo:\n{str(e)}")
 
@@ -1322,6 +1338,25 @@ class InterfazTorneo:
       ##  vent.geometry("400x200")
         vent.transient(padre)
         Label(vent, text="Función en construcción", font=("Georgia", 12)).pack(expand=True)
+
+    def guardar_progreso_torneo(self, cat_actual):
+        nombre_sugerido = f"progreso_{cat_actual.nombre.replace(' ', '_')}.dtpa"
+        
+        ruta_archivo = filedialog.asksaveasfilename(
+            title="Guardar progreso del torneo",
+            initialfile=nombre_sugerido,
+            defaultextension=".dtpa",
+            filetypes=[("Archivos de Torneo DTPA", "*.dtpa"), ("Todos los archivos", "*.*")]
+        )
+        
+        if ruta_archivo:
+            try:
+                with open(ruta_archivo, 'wb') as f:
+                    pickle.dump(cat_actual, f)
+                
+                messagebox.showinfo("Guardado Exitoso", "El progreso de los duelos y tablas se ha respaldado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error al guardar", f"No se pudo guardar el progreso:\n{str(e)}")
 
     def abrir_ventana_grupo(self, cat, grupo, ventana_padre):
         vent = Toplevel(ventana_padre)
@@ -1354,13 +1389,15 @@ class InterfazTorneo:
 
         marco_botones = Frame(vent, bg="#E8E2E2")
         marco_botones.pack(fill=X, side=BOTTOM, pady=20, padx=30)
-        Button(marco_botones, text="Guardar", command=self.exportar_configuracion, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=LEFT)
+        Button(marco_botones, text="Guardar", command=lambda: self.guardar_progreso_torneo(cat), bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=LEFT)
         Button(marco_botones, text="Cerrar", command=vent.destroy, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=RIGHT)
+
 
     def ingresar_resultado_duelo(self, cat, duelo, callback_redibujar, ventana_padre):
         vent = Toplevel(ventana_padre)
         vent.title("Resultado")
         vent.geometry("450x150")
+        vent.minsize(600,150)
         vent.config(bg="#E8E2E2")
         vent.transient(ventana_padre)
         vent.grab_set()
@@ -1414,10 +1451,12 @@ class InterfazTorneo:
         Label(marco_b, text=duelo.esgrimista_b.nombre, bg="#E8E2E2", width=25, anchor=W).pack(side=LEFT)
         Button(marco_b, text="Sanción leve", command=lambda: [duelo.registrar_falta_leve_b(), self.actualizar_broadcast_silencioso(cat), messagebox.showinfo("Sanción", "Leve registrada.", parent=vent)], bg="#2c3e50", fg="white").pack(side=LEFT, padx=5)
         Button(marco_b, text="Sanción Grave", command=lambda: [duelo.esgrimista_b.registrar_falta_grave(duelo_str=duelo_str), self.actualizar_broadcast_silencioso(cat), messagebox.showinfo("Sanción", "Grave registrada.", parent=vent)], bg="#940101", fg="white").pack(side=LEFT, padx=5)
+    
     def abrir_tabla_posiciones(self, cat, ventana_padre):
         vent = Toplevel(ventana_padre)
         vent.title(f"Tabla de Posiciones - {cat.nombre}")
       ##  vent.geometry("600x500")
+        vent.minsize(700,700)
         vent.transient(ventana_padre)
         
         arbol = ttk.Treeview(vent, columns=("Grupo", "Nombre", "Pts", "Dif"), show='headings')
@@ -1453,6 +1492,7 @@ class InterfazTorneo:
         vent = Toplevel(ventana_padre)
         vent.title(f"Gestión de Sanciones - {cat.nombre}")
       ##  vent.geometry("700x450")
+        vent.minsize(700,450)
         vent.transient(ventana_padre)
         vent.grab_set()
         
@@ -1726,7 +1766,8 @@ class InterfazTorneo:
         
         vent = Toplevel(ventana_padre)
         vent.title(f"Duelos Eliminatorios - {cat.nombre}")
-        vent.geometry("1100x700") 
+        vent.geometry("1100x700")
+        vent.minsize(1100,700) 
         vent.config(bg="#E8E2E2")
         vent.transient(ventana_padre)
         vent.grab_set()
@@ -1807,8 +1848,13 @@ class InterfazTorneo:
                 texto_duelo = f"[{llave_id}]   {esg_a}   -  vs  -   {esg_b}"
                 Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=50, anchor=W).pack(side=LEFT)
                 
-                Button(fila, text="Ingresar|Modificar Resultado", command=lambda: None, bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
-                Button(fila, text="Registrar Sanciones", command=lambda: None, bg="#940101", fg="white").pack(side=LEFT, padx=5)
+                Button(fila, text="Ingresar|Modificar Resultado", 
+                       command=lambda r=ronda, num=i, a=esg_a, b=esg_b: self.abrir_resultado_eliminatoria(cat, r, num, a, b, vent), 
+                       bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
+                
+                Button(fila, text="Registrar Sanciones", 
+                       command=lambda r=ronda, num=i, a=esg_a, b=esg_b: self.abrir_sanciones_eliminatoria(cat, r, num, a, b, vent), 
+                       bg="#940101", fg="white").pack(side=LEFT, padx=5)
             
             if nombre_fase == "SEMIFINALES":
                 Label(marco_scroll, text="TERCER LUGAR", font=("Georgia", 16, "bold"), bg="#E8E2E2", fg="#940101").pack(pady=(25, 10), anchor=W)
@@ -1816,12 +1862,61 @@ class InterfazTorneo:
                 fila.pack(fill=X, pady=6)
                 texto_duelo = f"[BRONCE]   Perdedor Llave 1   -  vs  -   Perdedor Llave 2"
                 Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=50, anchor=W).pack(side=LEFT)
-                Button(fila, text="Ingresar|Modificar Resultado", command=lambda: None, bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
-                Button(fila, text="Registrar Sanciones", command=lambda: None, bg="#940101", fg="white").pack(side=LEFT, padx=5)
+                Button(fila, text="Ingresar|Modificar Resultado", 
+                       command=lambda: self.abrir_resultado_eliminatoria(cat, "BRONCE", 1, "Perdedor Llave 1", "Perdedor Llave 2", vent), 
+                       bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
+                Button(fila, text="Registrar Sanciones", 
+                        command=lambda: self.abrir_sanciones_eliminatoria(cat, "BRONCE", 1, "Perdedor Llave 1", "Perdedor Llave 2", vent), 
+                        bg="#940101", fg="white").pack(side=LEFT, padx=5)
         marco_botones = Frame(vent, bg="#E8E2E2")
         marco_botones.pack(fill=X, side=BOTTOM, pady=20, padx=30)
         Button(marco_botones, text="Guardar", command=self.exportar_configuracion, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=LEFT)
         Button(marco_botones, text="Cerrar", command=vent.destroy, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=RIGHT)
+
+    def abrir_resultado_eliminatoria(self, cat, ronda, num_llave, esg_a, esg_b, ventana_padre):
+        vent = Toplevel(ventana_padre)
+        vent.title(f"Resultado - {esg_a} vs {esg_b}")
+        vent.geometry("450x300")
+        vent.minsize(600,350)
+        vent.config(bg="#E8E2E2")
+        vent.transient(ventana_padre)
+        vent.grab_set()
+
+        Label(vent, text=f"Fase: {ronda} - Llave {num_llave}", font=("Georgia", 14, "bold"), bg="#E8E2E2", fg="#2c3e50").pack(pady=15)
+        
+        marco_inputs = Frame(vent, bg="#E8E2E2")
+        marco_inputs.pack(fill=X, padx=20, pady=10)
+
+        Label(marco_inputs, text=esg_a, font=("Georgia", 12), bg="#E8E2E2", width=20, anchor=E).grid(row=0, column=0, pady=10, padx=5)
+        pts_a = IntVar()
+        Entry(marco_inputs, textvariable=pts_a, width=5, font=("Georgia", 12)).grid(row=0, column=1, pady=10)
+
+        Label(marco_inputs, text=esg_b, font=("Georgia", 12), bg="#E8E2E2", width=20, anchor=E).grid(row=1, column=0, pady=10, padx=5)
+        pts_b = IntVar()
+        Entry(marco_inputs, textvariable=pts_b, width=5, font=("Georgia", 12)).grid(row=1, column=1, pady=10)
+
+        def guardar():
+            self.actualizar_broadcast_silencioso(cat)
+            vent.destroy()
+
+        Button(vent, text="Guardar Resultado", command=guardar, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(pady=20)
+
+    def abrir_sanciones_eliminatoria(self, cat, ronda, num_llave, esg_a, esg_b, ventana_padre):
+        vent = Toplevel(ventana_padre)
+        vent.title(f"Sanciones - {esg_a} vs {esg_b}")
+        vent.geometry("400x250")
+        vent.config(bg="#E8E2E2")
+        vent.transient(ventana_padre)
+        vent.grab_set()
+
+        Label(vent, text=f"Sanciones: Llave {num_llave}", font=("Georgia", 14, "bold"), bg="#E8E2E2", fg="#940101").pack(pady=15)
+
+        def registrar_falta(esgrimista):
+            self.actualizar_broadcast_silencioso(cat)
+            vent.destroy()
+
+        Button(vent, text=f"Falta Leve: {esg_a}", command=lambda: registrar_falta(esg_a), bg="#e67e22", fg="white", font=("Georgia", 11, "bold"), width=30).pack(pady=10)
+        Button(vent, text=f"Falta Leve: {esg_b}", command=lambda: registrar_falta(esg_b), bg="#e67e22", fg="white", font=("Georgia", 11, "bold"), width=30).pack(pady=10)
 
     def ejecutar_broadcast(self, cat, etapa, label_status):
         self.broadcast_activo = True
