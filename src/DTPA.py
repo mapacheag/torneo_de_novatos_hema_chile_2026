@@ -1838,9 +1838,9 @@ class InterfazTorneo:
             try:
                 import subprocess
                 html_content = cat.generar_index_html(etapa)
-                with open("index.html", "w", encoding="utf-8") as f:
+                with open("../index.html", "w", encoding="utf-8") as f:
                     f.write(html_content)
-                subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
+                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", f"Broadcast {etapa} en vivo - {cat.nombre}"], check=False, capture_output=True) 
                 subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
                 label_status.config(text="En línea", fg="#27ae60")
@@ -1873,10 +1873,10 @@ class InterfazTorneo:
                 </div>
                 </body></html>"""
                 
-                with open("index.html", "w", encoding="utf-8") as f:
+                with open("../index.html", "w", encoding="utf-8") as f:
                     f.write(html_standby)
                 
-                subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
+                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Fin de Broadcast (Standby)"], check=False, capture_output=True)
                 subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
                 
@@ -1896,9 +1896,9 @@ class InterfazTorneo:
             try:
                 import subprocess
                 html_content = cat.generar_index_html(self.etapa_broadcast)
-                with open("index.html", "w", encoding="utf-8") as f:
+                with open("../index.html", "w", encoding="utf-8") as f:
                     f.write(html_content)
-                subprocess.run(["git", "add", "index.html"], check=True, capture_output=True)
+                subprocess.run(["git", "add", "../index.html"], check=True, capture_output=True)
                 subprocess.run(["git", "commit", "-m", "Auto-actualización de puntaje en vivo"], check=False, capture_output=True)
                 subprocess.run(["git", "push", "-u", "origin", "master:main"], check=True, capture_output=True)
             except Exception as e:
