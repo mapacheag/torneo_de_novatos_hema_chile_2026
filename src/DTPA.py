@@ -1374,12 +1374,12 @@ class InterfazTorneo:
         def dibujar_duelos():
             for widget in marco_duelos.winfo_children():
                 widget.destroy()
+            duelos_ordenados = self.ordenar_duelos_con_descanso(grupo)
                 
-            for duelo in grupo.duelos:
+            for duelo in duelos_ordenados:
                 fila = Frame(marco_duelos, bg="#E8E2E2")
                 fila.pack(fill=X, pady=6)
                 
-                # Rescate seguro de puntajes: si el atributo no existe, asigna un 0
                 pts_a = getattr(duelo, 'puntaje_a_ingresado', 0)
                 pts_b = getattr(duelo, 'puntaje_b_ingresado', 0)
                 
@@ -1388,6 +1388,7 @@ class InterfazTorneo:
                 
                 Button(fila, text="Ingresar|Modificar Resultado", command=lambda d=duelo: self.ingresar_resultado_duelo(cat, d, dibujar_duelos, vent), bg="#2c3e50", fg="white").pack(side=LEFT, padx=5)
                 Button(fila, text="Registrar Sanciones", command=lambda d=duelo: self.registrar_sanciones_duelo(cat, d, vent), bg="#940101", fg="white").pack(side=LEFT, padx=5)
+                
         dibujar_duelos()
 
         marco_botones = Frame(vent, bg="#E8E2E2")
@@ -1521,14 +1522,21 @@ class InterfazTorneo:
             mapa_esgrimistas.clear()
             
             for esg in cat.esgrimistas:
-                texto_leves = f"{esg.faltas_leves_totales} ({esg.derrotas_por_faltas})"
-                texto_graves = f"{esg.faltas_graves_totales} E" if esg.faltas_graves_totales >= 2 else str(esg.faltas_graves_totales)
-                tag = "rojo_peligro" if esg.descalificado else ""
+                leves = getattr(esg, 'faltas_leves_totales', 0)
+                derrotas = getattr(esg, 'derrotas_por_faltas', 0)
+                graves = getattr(esg, 'faltas_graves_totales', 0)
+                desc = getattr(esg, 'descalificado', False)
+                
+                texto_leves = f"{leves} ({derrotas})"
+                texto_graves = f"{graves} E" if graves >= 2 else str(graves)
+                tag = "rojo_peligro" if desc else ""
+                
                 iid = arbol.insert("", "end", values=(esg.nombre, texto_leves, texto_graves), tags=(tag,))
                 mapa_esgrimistas[iid] = esg
                 
         dibujar_lista()
-        
+
+
         def boton_editar_seleccionado():
             seleccion = arbol.selection()
             if not seleccion:
