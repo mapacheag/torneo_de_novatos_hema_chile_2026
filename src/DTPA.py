@@ -543,6 +543,54 @@ class Categoria:
 
                 nombres_ordenados = [nombres_jugadores[i - 1] for i in generar_orden_bracket(n_slots)]
 
+                duelos_por_fase = {}
+                duelos_fase_1 = []
+                for i in range(0, n_slots, 2):
+                    duelos_fase_1.append((nombres_ordenados[i], nombres_ordenados[i+1]))
+                duelos_por_fase[n_rondas] = duelos_fase_1
+
+                perdedor_semi_1 = "Perdedor Semifinal 1"
+                perdedor_semi_2 = "Perdedor Semifinal 2"
+
+                for ronda in range(n_rondas - 1, 0, -1):
+                    duelos_fase_n = []
+                    duelos_anteriores = duelos_por_fase[ronda + 1]
+                    
+                    for i in range(0, len(duelos_anteriores), 2):
+                        num_llave_a = i + 1
+                        esg_a_prev, esg_b_prev = duelos_anteriores[i]
+                        clave_a = f"{ronda + 1}_{num_llave_a}"
+                        ganador_a = f"Ganador Llave {num_llave_a}"
+                        perdedor_a = f"Perdedor Llave {num_llave_a}"
+                        
+                        if hasattr(self, 'resultados_eliminatorias') and clave_a in self.resultados_eliminatorias:
+                            res_a = self.resultados_eliminatorias[clave_a]
+                            if res_a['pts_a'] > res_a['pts_b']:
+                                ganador_a, perdedor_a = esg_a_prev, esg_b_prev
+                            elif res_a['pts_b'] > res_a['pts_a']:
+                                ganador_a, perdedor_a = esg_b_prev, esg_a_prev
+                        
+                        num_llave_b = i + 2
+                        esg_a_prev2, esg_b_prev2 = duelos_anteriores[i+1]
+                        clave_b = f"{ronda + 1}_{num_llave_b}"
+                        ganador_b = f"Ganador Llave {num_llave_b}"
+                        perdedor_b = f"Perdedor Llave {num_llave_b}"
+                        
+                        if hasattr(self, 'resultados_eliminatorias') and clave_b in self.resultados_eliminatorias:
+                            res_b = self.resultados_eliminatorias[clave_b]
+                            if res_b['pts_a'] > res_b['pts_b']:
+                                ganador_b, perdedor_b = esg_a_prev2, esg_b_prev2
+                            elif res_b['pts_b'] > res_b['pts_a']:
+                                ganador_b, perdedor_b = esg_b_prev2, esg_a_prev2
+
+                        duelos_fase_n.append((ganador_a, ganador_b))
+                        
+                        if ronda == 1:
+                            perdedor_semi_1 = perdedor_a
+                            perdedor_semi_2 = perdedor_b
+                            
+                    duelos_por_fase[ronda] = duelos_fase_n
+
                 html_rondas = ""
                 for ronda in range(n_rondas, 0, -1):
                     if ronda == 1: nombre_fase = "FINAL"
@@ -552,20 +600,46 @@ class Categoria:
                     else: nombre_fase = f"RONDA DE {2**ronda}"
                     
                     html_rondas += f"<div class='ronda'>\n<div class='header-ronda'>{nombre_fase}</div>\n"
-                    for i in range(2 ** (ronda - 1)):
-                        html_rondas += "<div class='duelo'>\n"
-                        esg_a = nombres_ordenados[i * 2] if ronda == n_rondas else "Por definir"
-                        esg_b = nombres_ordenados[i * 2 + 1] if ronda == n_rondas else "Por definir"
-                        html_rondas += f"<div class='esgrimista'>{esg_a}</div>\n<div class='esgrimista'>{esg_b}</div>\n</div>\n"
+                    
+                    lista_duelos = duelos_por_fase[ronda]
+                    for i, (esg_a, esg_b) in enumerate(lista_duelos, 1):
+                        clave_llave = f"{ronda}_{i}"
+                        
+                        if hasattr(self, 'resultados_eliminatorias') and clave_llave in self.resultados_eliminatorias:
+                            pts_a = self.resultados_eliminatorias[clave_llave]['pts_a']
+                            pts_b = self.resultados_eliminatorias[clave_llave]['pts_b']
+                            html_rondas += "<div class='duelo'>\n"
+                            html_rondas += f"<div class='esgrimista'>{esg_a} ({pts_a})</div>\n"
+                            html_rondas += f"<div class='esgrimista'>{esg_b} ({pts_b})</div>\n"
+                            html_rondas += "</div>\n"
+                        else:
+                            html_rondas += "<div class='duelo'>\n"
+                            html_rondas += f"<div class='esgrimista'>{esg_a}</div>\n"
+                            html_rondas += f"<div class='esgrimista'>{esg_b}</div>\n"
+                            html_rondas += "</div>\n"
+                            
                     html_rondas += "</div>\n"
 
+                clave_bronce = "BRONCE_1"
+                if hasattr(self, 'resultados_eliminatorias') and clave_bronce in self.resultados_eliminatorias:
+                    pts_a_b = self.resultados_eliminatorias[clave_bronce]['pts_a']
+                    pts_b_b = self.resultados_eliminatorias[clave_bronce]['pts_b']
+                    html_bronce = f"""
+                        <div class='esgrimista'>{perdedor_semi_1} ({pts_a_b})</div>
+                        <div class='esgrimista'>{perdedor_semi_2} ({pts_b_b})</div>
+                    """
+                else:
+                    html_bronce = f"""
+                        <div class='esgrimista'>{perdedor_semi_1}</div>
+                        <div class='esgrimista'>{perdedor_semi_2}</div>
+                    """
+
                 contenido_dinamico = f"<div class='bracket-container'>\n{html_rondas}\n</div>"
-                contenido_dinamico += """
+                contenido_dinamico += f"""
                 <div class='footer-bronce'>
                     <h3 style='color: #940101;'>TERCER LUGAR</h3>
                     <div style='display: inline-block; text-align: left;'>
-                        <div class='esgrimista'>Perdedor Semifinal 1</div>
-                        <div class='esgrimista'>Perdedor Semifinal 2</div>
+                        {html_bronce}
                     </div>
                 </div>"""
 
@@ -632,7 +706,6 @@ class Categoria:
 </body>
 </html>"""
         return html_final
-
     
     def __repr__(self):
         return f"Categoria: {self.nombre} | Inscritos: {len(self.esgrimistas)} | Grupos: {len(self.grupos)}"
@@ -1713,33 +1786,112 @@ class InterfazTorneo:
             
         orden_semillas = generar_orden_bracket(n_slots)
         nombres_ordenados = [nombres_jugadores[i - 1] for i in orden_semillas]
-        
-        def construir_newick_con_nombres(lista_nombres, ronda_actual):
-            if len(lista_nombres) == 1:
-                return lista_nombres[0].replace(" ", "_").replace("(", "").replace(")", "")
-                
-            mitad = len(lista_nombres) // 2
-            izq = construir_newick_con_nombres(lista_nombres[:mitad], ronda_actual + 1)
-            der = construir_newick_con_nombres(lista_nombres[mitad:], ronda_actual + 1)
+
+        duelos_por_fase = {}
+        duelos_fase_1 = []
+        for i in range(0, n_slots, 2):
+            duelos_fase_1.append((nombres_ordenados[i], nombres_ordenados[i+1]))
+        duelos_por_fase[n_rondas] = duelos_fase_1
+
+        perdedor_semi_1 = "Perdedor Llave 1"
+        perdedor_semi_2 = "Perdedor Llave 2"
+
+        for ronda in range(n_rondas - 1, 0, -1):
+            duelos_fase_n = []
+            duelos_anteriores = duelos_por_fase[ronda + 1]
             
-            if ronda_actual == 1:
-                nombre_nodo = "FINAL"
-            elif ronda_actual == 2:
-                nombre_nodo = "Semis"
-            elif ronda_actual == 3:
-                nombre_nodo = "Cuartos"
-            elif ronda_actual == 4:
-                nombre_nodo = "Octavos"
+            for i in range(0, len(duelos_anteriores), 2):
+                num_llave_a = i + 1
+                esg_a_prev, esg_b_prev = duelos_anteriores[i]
+                clave_a = f"{ronda + 1}_{num_llave_a}"
+                ganador_a = f"Ganador Llave {num_llave_a}"
+                perdedor_a = f"Perdedor Llave {num_llave_a}"
+                
+                if hasattr(cat, 'resultados_eliminatorias') and clave_a in cat.resultados_eliminatorias:
+                    res_a = cat.resultados_eliminatorias[clave_a]
+                    if res_a['pts_a'] > res_b['pts_b']:
+                        ganador_a, perdedor_a = esg_a_prev, esg_b_prev
+                    elif res_a['pts_b'] > res_a['pts_a']:
+                        ganador_a, perdedor_a = esg_b_prev, esg_a_prev
+                
+                num_llave_b = i + 2
+                esg_a_prev2, esg_b_prev2 = duelos_anteriores[i+1]
+                clave_b = f"{ronda + 1}_{num_llave_b}"
+                ganador_b = f"Ganador Llave {num_llave_b}"
+                perdedor_b = f"Perdedor Llave {num_llave_b}"
+                
+                if hasattr(cat, 'resultados_eliminatorias') and clave_b in cat.resultados_eliminatorias:
+                    res_b = cat.resultados_eliminatorias[clave_b]
+                    if res_b['pts_a'] > res_b['pts_b']:
+                        ganador_b, perdedor_b = esg_a_prev2, esg_b_prev2
+                    elif res_b['pts_b'] > res_b['pts_a']:
+                        ganador_b, perdedor_b = esg_b_prev2, esg_a_prev2
+
+                duelos_fase_n.append((ganador_a, ganador_b))
+                
+                if ronda == 1:
+                    perdedor_semi_1 = perdedor_a
+                    perdedor_semi_2 = perdedor_b
+                    
+            duelos_por_fase[ronda] = duelos_fase_n
+
+        def construir_newick_actualizado(ronda_actual, indice_llave_en_ronda=0):
+            if ronda_actual == n_rondas:
+                esg_a, esg_b = duelos_por_fase[ronda_actual][indice_llave_en_ronda]
+
+                esg_a = esg_a.replace(" ", "_").replace("(", "").replace(")", "")
+                esg_b = esg_b.replace(" ", "_").replace("(", "").replace(")", "")
+                
+                clave_llave = f"{ronda_actual}_{indice_llave_en_ronda + 1}"
+                if hasattr(cat, 'resultados_eliminatorias') and clave_llave in cat.resultados_eliminatorias:
+                    pts_a = cat.resultados_eliminatorias[clave_llave]['pts_a']
+                    pts_b = cat.resultados_eliminatorias[clave_llave]['pts_b']
+                    ganador = esg_a if pts_a > pts_b else esg_b if pts_b > pts_a else "Empate"
+                    return f"({esg_a}[{pts_a}],{esg_b}[{pts_b}]){ganador}"
+                else:
+                    return f"({esg_a},{esg_b})Ronda_{ronda_actual}_Llave_{indice_llave_en_ronda + 1}"
+
+            indice_izq = indice_llave_en_ronda * 2
+            indice_der = indice_izq + 1
+            
+            rama_izq = construir_newick_actualizado(ronda_actual + 1, indice_izq)
+            rama_der = construir_newick_actualizado(ronda_actual + 1, indice_der)
+
+            if ronda_actual == 1: nombre_nodo = "FINAL"
+            elif ronda_actual == 2: nombre_nodo = "Semis"
+            elif ronda_actual == 3: nombre_nodo = "Cuartos"
+            elif ronda_actual == 4: nombre_nodo = "Octavos"
+            else: nombre_nodo = f"Ronda_{ronda_actual}"
+
+            clave_llave = f"{ronda_actual}_{indice_llave_en_ronda + 1}"
+            if hasattr(cat, 'resultados_eliminatorias') and clave_llave in cat.resultados_eliminatorias:
+                pts_a = cat.resultados_eliminatorias[clave_llave]['pts_a']
+                pts_b = cat.resultados_eliminatorias[clave_llave]['pts_b']
+                esg_a, esg_b = duelos_por_fase[ronda_actual][indice_llave_en_ronda]
+                esg_a = esg_a.replace(" ", "_")
+                esg_b = esg_b.replace(" ", "_")
+                ganador = esg_a if pts_a > pts_b else esg_b if pts_b > pts_a else nombre_nodo
+                return f"({rama_izq},{rama_der}){ganador}"
             else:
-                nombre_nodo = f"Ronda_{ronda_actual}"
-                
-            return f"({izq},{der}){nombre_nodo}"
-            
-        newick_final = construir_newick_con_nombres(nombres_ordenados, 1) + ";"
+                 return f"({rama_izq},{rama_der}){nombre_nodo}"
+                 
+        newick_final = construir_newick_actualizado(1, 0) + ";"
+
+        perdedor_semi_1_n = perdedor_semi_1.replace(" ", "_").replace("(", "").replace(")", "")
+        perdedor_semi_2_n = perdedor_semi_2.replace(" ", "_").replace("(", "").replace(")", "")
         
+        clave_bronce = "BRONCE_1"
+        if hasattr(cat, 'resultados_eliminatorias') and clave_bronce in cat.resultados_eliminatorias:
+            pts_a = cat.resultados_eliminatorias[clave_bronce]['pts_a']
+            pts_b = cat.resultados_eliminatorias[clave_bronce]['pts_b']
+            ganador_bronce = perdedor_semi_1_n if pts_a > pts_b else perdedor_semi_2_n if pts_b > pts_a else "Bronce"
+            newick_bronce = f"({perdedor_semi_1_n}[{pts_a}], {perdedor_semi_2_n}[{pts_b}]){ganador_bronce};"
+        else:
+             newick_bronce = f"({perdedor_semi_1_n}, {perdedor_semi_2_n})Bronce;"
+
         try:
             arbol_final = et.Tree(newick_final, format=1)
-            arbol_bronce = et.Tree("(Perdedor_Semi_1, Perdedor_Semi_2)Bronce;", format=1)
+            arbol_bronce = et.Tree(newick_bronce, format=1)
             
             for nodo in arbol_final.traverse():
                 nodo.name = nodo.name.replace("_", " ")
@@ -1820,7 +1972,6 @@ class InterfazTorneo:
             
         orden_semillas = generar_orden_bracket(n_slots)
         nombres_ordenados = [nombres_jugadores[i - 1] for i in orden_semillas]
-
         duelos_por_fase = {}
         
         duelos_fase_1 = []
@@ -1828,24 +1979,54 @@ class InterfazTorneo:
             duelos_fase_1.append((nombres_ordenados[i], nombres_ordenados[i+1]))
         duelos_por_fase[n_rondas] = duelos_fase_1
 
+        perdedor_semi_1 = "Perdedor Llave 1"
+        perdedor_semi_2 = "Perdedor Llave 2"
+
         for ronda in range(n_rondas - 1, 0, -1):
             duelos_fase_n = []
-            n_duelos_ronda_anterior = len(duelos_por_fase[ronda + 1])
-            for i in range(1, n_duelos_ronda_anterior, 2):
-                duelos_fase_n.append((f"Ganador Llave {i}", f"Ganador Llave {i+1}"))
+            duelos_anteriores = duelos_por_fase[ronda + 1]
+            
+            for i in range(0, len(duelos_anteriores), 2):
+                num_llave_a = i + 1
+                esg_a_prev, esg_b_prev = duelos_anteriores[i]
+                clave_a = f"{ronda + 1}_{num_llave_a}"
+                ganador_a = f"Ganador Llave {num_llave_a}"
+                perdedor_a = f"Perdedor Llave {num_llave_a}"
+                
+                if hasattr(cat, 'resultados_eliminatorias') and clave_a in cat.resultados_eliminatorias:
+                    res_a = cat.resultados_eliminatorias[clave_a]
+                    if res_a['pts_a'] > res_a['pts_b']:
+                        ganador_a, perdedor_a = esg_a_prev, esg_b_prev
+                    elif res_a['pts_b'] > res_a['pts_a']:
+                        ganador_a, perdedor_a = esg_b_prev, esg_a_prev
+                
+                num_llave_b = i + 2
+                esg_a_prev2, esg_b_prev2 = duelos_anteriores[i+1]
+                clave_b = f"{ronda + 1}_{num_llave_b}"
+                ganador_b = f"Ganador Llave {num_llave_b}"
+                perdedor_b = f"Perdedor Llave {num_llave_b}"
+                
+                if hasattr(cat, 'resultados_eliminatorias') and clave_b in cat.resultados_eliminatorias:
+                    res_b = cat.resultados_eliminatorias[clave_b]
+                    if res_b['pts_a'] > res_b['pts_b']:
+                        ganador_b, perdedor_b = esg_a_prev2, esg_b_prev2
+                    elif res_b['pts_b'] > res_b['pts_a']:
+                        ganador_b, perdedor_b = esg_b_prev2, esg_a_prev2
+
+                duelos_fase_n.append((ganador_a, ganador_b))
+                
+                if ronda == 1:
+                    perdedor_semi_1 = perdedor_a
+                    perdedor_semi_2 = perdedor_b
+                    
             duelos_por_fase[ronda] = duelos_fase_n
 
         for ronda in range(n_rondas, 0, -1):
-            if ronda == 1:
-                nombre_fase = "FINAL"
-            elif ronda == 2:
-                nombre_fase = "SEMIFINALES"
-            elif ronda == 3:
-                nombre_fase = "CUARTOS DE FINAL"
-            elif ronda == 4:
-                nombre_fase = "OCTAVOS DE FINAL"
-            else:
-                nombre_fase = f"RONDA DE {2**ronda}"
+            if ronda == 1: nombre_fase = "FINAL"
+            elif ronda == 2: nombre_fase = "SEMIFINALES"
+            elif ronda == 3: nombre_fase = "CUARTOS DE FINAL"
+            elif ronda == 4: nombre_fase = "OCTAVOS DE FINAL"
+            else: nombre_fase = f"RONDA DE {2**ronda}"
                 
             Label(marco_scroll, text=nombre_fase, font=("Georgia", 16, "bold"), bg="#E8E2E2", fg="#2c3e50").pack(pady=(25, 10), anchor=W)
             
@@ -1853,16 +2034,20 @@ class InterfazTorneo:
             for i, (esg_a, esg_b) in enumerate(lista_duelos, 1):
                 fila = Frame(marco_scroll, bg="#E8E2E2")
                 fila.pack(fill=X, pady=6)
-                
                 llave_id = "ORO" if nombre_fase == "FINAL" else f"Llave {i}" 
                 
-                texto_duelo = f"[{llave_id}]   {esg_a}   -  vs  -   {esg_b}"
-                Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=50, anchor=W).pack(side=LEFT)
+                clave_llave = f"{ronda}_{i}"
+                if hasattr(cat, 'resultados_eliminatorias') and clave_llave in cat.resultados_eliminatorias:
+                    pts_a = cat.resultados_eliminatorias[clave_llave]['pts_a']
+                    pts_b = cat.resultados_eliminatorias[clave_llave]['pts_b']
+                    texto_duelo = f"[{llave_id}]   {esg_a}   {pts_a} - {pts_b}   {esg_b}"
+                else:
+                    texto_duelo = f"[{llave_id}]   {esg_a}   - vs -   {esg_b}"
                 
+                Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=50, anchor=W).pack(side=LEFT)
                 Button(fila, text="Ingresar|Modificar Resultado", 
                        command=lambda r=ronda, num=i, a=esg_a, b=esg_b: self.abrir_resultado_eliminatoria(cat, r, num, a, b, vent), 
                        bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
-                
                 Button(fila, text="Registrar Sanciones", 
                        command=lambda r=ronda, num=i, a=esg_a, b=esg_b: self.abrir_sanciones_eliminatoria(cat, r, num, a, b, vent), 
                        bg="#940101", fg="white").pack(side=LEFT, padx=5)
@@ -1871,19 +2056,28 @@ class InterfazTorneo:
                 Label(marco_scroll, text="TERCER LUGAR", font=("Georgia", 16, "bold"), bg="#E8E2E2", fg="#940101").pack(pady=(25, 10), anchor=W)
                 fila = Frame(marco_scroll, bg="#E8E2E2")
                 fila.pack(fill=X, pady=6)
-                texto_duelo = f"[BRONCE]   Perdedor Llave 1   -  vs  -   Perdedor Llave 2"
+                
+                clave_bronce = "BRONCE_1"
+                if hasattr(cat, 'resultados_eliminatorias') and clave_bronce in cat.resultados_eliminatorias:
+                    pts_a = cat.resultados_eliminatorias[clave_bronce]['pts_a']
+                    pts_b = cat.resultados_eliminatorias[clave_bronce]['pts_b']
+                    texto_duelo = f"[BRONCE]   {perdedor_semi_1}   {pts_a} - {pts_b}   {perdedor_semi_2}"
+                else:
+                    texto_duelo = f"[BRONCE]   {perdedor_semi_1}   - vs -   {perdedor_semi_2}"
+                
                 Label(fila, text=texto_duelo, bg="#E8E2E2", font=("Georgia", 11), width=50, anchor=W).pack(side=LEFT)
                 Button(fila, text="Ingresar|Modificar Resultado", 
-                       command=lambda: self.abrir_resultado_eliminatoria(cat, "BRONCE", 1, "Perdedor Llave 1", "Perdedor Llave 2", vent), 
+                       command=lambda a=perdedor_semi_1, b=perdedor_semi_2: self.abrir_resultado_eliminatoria(cat, "BRONCE", 1, a, b, vent), 
                        bg="#2c3e50", fg="white").pack(side=LEFT, padx=(10, 5))
                 Button(fila, text="Registrar Sanciones", 
-                        command=lambda: self.abrir_sanciones_eliminatoria(cat, "BRONCE", 1, "Perdedor Llave 1", "Perdedor Llave 2", vent), 
+                        command=lambda a=perdedor_semi_1, b=perdedor_semi_2: self.abrir_sanciones_eliminatoria(cat, "BRONCE", 1, a, b, vent), 
                         bg="#940101", fg="white").pack(side=LEFT, padx=5)
+                        
         marco_botones = Frame(vent, bg="#E8E2E2")
         marco_botones.pack(fill=X, side=BOTTOM, pady=20, padx=30)
-        Button(marco_botones, text="Guardar", command=self.exportar_configuracion, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=LEFT)
+        Button(marco_botones, text="Guardar", command=lambda: self.guardar_progreso_torneo(cat), bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=LEFT)
         Button(marco_botones, text="Cerrar", command=vent.destroy, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(side=RIGHT)
-
+    
     def abrir_resultado_eliminatoria(self, cat, ronda, num_llave, esg_a, esg_b, ventana_padre):
         vent = Toplevel(ventana_padre)
         vent.title(f"Resultado - {esg_a} vs {esg_b}")
@@ -1907,8 +2101,27 @@ class InterfazTorneo:
         Entry(marco_inputs, textvariable=pts_b, width=5, font=("Georgia", 12)).grid(row=1, column=1, pady=10)
 
         def guardar():
-            self.actualizar_broadcast_silencioso(cat)
-            vent.destroy()
+            try:
+                puntos_a = pts_a.get()
+                puntos_b = pts_b.get()
+                
+                if not hasattr(cat, 'resultados_eliminatorias'):
+                    cat.resultados_eliminatorias = {}
+                clave_llave = f"{ronda}_{num_llave}"
+                cat.resultados_eliminatorias[clave_llave] = {
+                    'pts_a': puntos_a,
+                    'pts_b': puntos_b
+                }
+                
+                self.actualizar_broadcast_silencioso(cat)
+                
+                vent.destroy()
+                ventana_padre.destroy()
+                self.abrir_duelos_eliminatorios(cat, self.pagina_principal)
+                
+            except Exception as e:
+                from tkinter import messagebox
+                messagebox.showerror("Error", f"Verifique que los campos sean numéricos.\n{str(e)}")
 
         Button(vent, text="Guardar Resultado", command=guardar, bg="#2c3e50", fg="white", font=("Georgia", 11, "bold")).pack(pady=20)
 
